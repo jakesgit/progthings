@@ -26,20 +26,24 @@ public void draw() {
 void serialEvent(Serial myPort) {
   val = myPort.readStringUntil('\n');
 
-  if (val != null) { //make sure our data isn't empty before continuing
+  if (val != null)
+  { //make sure our data isn't empty before continuing
     val = trim(val); //trim whitespace and formatting characters
     println(val);
     //look for our '!' string to start the handshake
     //if it's there, clear the buffer, and send a request for data
-    if (firstContact == false) {
-      if (val.equals("!")) {
+    if (firstContact == false)
+    {
+      if (val.equals("!")) 
+      {
         myPort.clear();
         firstContact = true;
         myPort.write("!");
-        println("Contact!");
+        println("Contact made.");
        // txtMsgFromZumo.appendText("\n" + val);
       }
-    } else 
+    }
+    else 
     { //if we've already established contact, keep getting and parsing data
       //println(val + " after else stmt");
 

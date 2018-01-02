@@ -3,11 +3,16 @@
 #include <Pushbutton.h>
 #include <QTRSensors.h>
 #include <ZumoReflectanceSensorArray.h>
-#include <TurnSensor.h>
+#include <NewPing.h>
 
 
 #define LED 13
 #define SENSOR_THRESHOLD 1000;
+
+#define TRIGGER_PIN 2
+#define ECHO_PIN 6
+#define MAX_DISTANCE 20
+NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); //NewPing constructor with necessary info
 
 #define NUM_SENSORS 6
 unsigned int sensor_values[NUM_SENSORS];
@@ -19,13 +24,15 @@ ZumoReflectanceSensorArray sensors(QTR_NO_EMITTER_PIN);
 Pushbutton button(ZUMO_BUTTON); // pushbutton on pin 12
 
 char val; //Data received from the serial port
-
+int roomCounter = 0;
+int corridorCounter = 0;
 
 void setup() {
   digitalWrite(LED, HIGH);
   button.waitForButton();
   digitalWrite(LED, LOW);
-  buzzer.playNote(NOTE_G(3), 200, 15);
+  //buzzer.playNote(NOTE_G(3), 200, 15);
+  buzzer.play(">g32>>c32");
   delay(1000);
 
   Serial.begin(9600);
@@ -35,28 +42,44 @@ void setup() {
 void loop() {
   sensors.read(sensor_values);
   val = Serial.read();
+    
+  switch (val) {
+    case 'Q': //stop button
+        motors.setSpeeds(0, 0);
+      break;
+    case 'W': //forward button
+        while (!isAtDeadEnd() && val != 'Q') {//each time we read the sensor values, do the following if leftmost and rightmost sensors are not both over a border.
+          moveForwardWithinBoundaries();
+        }
+        motors.setSpeeds(0, 0);
 
-  if (val == 'Q') {
-    motors.setSpeeds(0, 0);
-  }
-  else  if (val == 'W') {
-    while (!isAtDeadEnd() && val != 'Q') {//each time we read the sensor values, do the following if leftmost and rightmost sensors are not both over a border.
-      moveForwardWithinBoundaries();
-    }
-    motors.setSpeeds(0, 0);
+        if (val != 'Q') 
+        {//if we haven't sent quit command but have broken out of while loop, must be at wall, so send message indicating that
+          Serial.println("Wall detected, Zumo stopping.");
+        }
+      break;
+    case 'A': //left button
+        motors.setSpeeds(-150, 150); //rotate left
+      break;
+    case 'S': //backwards button
+        motors.setSpeeds(-100, -100); //go backwards
+      break;
+    case 'D': //right button
+        motors.setSpeeds(150, -150); //rotate right
+      break;
 
-    if (val != 'Q') {//if we haven't sent quit command but have broken out of while loop, must be at wall, so send message indicating that
-      Serial.println("Wall detected, Zumo stopping.");
-    }
-  }
-  else if (val == 'A') {
-    motors.setSpeeds(-100, 100);
-  }
-  else if (val == 'S') {
-    motors.setSpeeds(-100, -100);
-  }
-  else if (val ==  'D') {
-    motors.setSpeeds(100, -100);
+    case 'L'://left room signal button
+        signalRoom('L');
+      break;        
+    case 'R'://right room signal button
+        signalRoom('R');
+      break;
+    case 'C': //corridor signal button
+        //++corridorCounter;
+      break;
+    case 'X': //scan button
+        scanRoom();
+      break;
   }
 }
 
@@ -64,7 +87,7 @@ void moveForwardWithinBoundaries() {
   motors.setSpeeds(100, 100);
   sensors.read(sensor_values);
   val = Serial.read();
-    
+
   if (overLine(sensor_values[0]))
   { //if leftmost sensor detects the border
     delay(120);
@@ -107,6 +130,62 @@ void establishContact() {
   while (Serial.available() <= 0) {
     Serial.println("!");   // send a !
     delay(300);
+  }
+}
+
+void signalRoom(char inDirection){
+  ++roomCounter;
+  Serial.print("Room found in corridor "); 
+  Serial.print(corridorCounter);
+  //print roomcounter too?
+
+  if (inDirection == 'L') {
+    Serial.println(" to our left.");
+  }
+  else
+  {
+    Serial.println(" to our right.");
+  }
+}
+
+int getObjectDistance() {
+  return sonar.ping() / US_ROUNDTRIP_CM;
+}
+
+void scanRoom() {
+  bool objectFoundFlag = false;
+  
+  for (int i=0; i<4; ++i)
+  {
+    if (i == 0 || i == 2)
+    {
+      motors.setSpeeds(150,-150);
+    }
+    else
+    {
+      motors.setSpeeds(-150,150);
+    }
+
+    if (getObjectDistance() > 0)
+    {
+      objectFoundFlag = true;
+    }
+
+    delay(500);
+  }
+  motors.setSpeeds(0,0);
+
+  if (objectFoundFlag)
+  {
+    Serial.print("An object was detected in room ");
+    Serial.print(roomCounter);
+    Serial.println(".");
+  }
+  else 
+  {
+    Serial.print("No objects were detected in room ");
+    Serial.print(roomCounter);
+    Serial.println(".");
   }
 }
 
