@@ -72,9 +72,11 @@ public void btnScan_click1(GButton source, GEvent event) { //_CODE_:btnScan:2118
   println("X");
 } //_CODE_:btnScan:211834:
 
-public void button1_click1(GButton source, GEvent event) { //_CODE_:R:730786:
+public void btnSignalCorridorR_click1(GButton source, GEvent event) { //_CODE_:btnSignalCorridorR:730786:
   println("R - GButton >> GEvent." + event + " @ " + millis());
-} //_CODE_:R:730786:
+  myPort.write('V');
+  println("V");
+} //_CODE_:btnSignalCorridorR:730786:
 
 
 
@@ -127,9 +129,10 @@ public void createGUI(){
   btnScan.setText("Scan Room");
   btnScan.setTextBold();
   btnScan.addEventHandler(this, "btnScan_click1");
-  R = new GButton(this, 100, 230, 80, 30);
-  R.setText("R (need implement)");
-  R.addEventHandler(this, "button1_click1");
+  btnSignalCorridorR = new GButton(this, 100, 230, 80, 30);
+  btnSignalCorridorR.setText("Signal Right Corridor");
+  btnSignalCorridorR.setTextBold();
+  btnSignalCorridorR.addEventHandler(this, "btnSignalCorridorR_click1");
 }
 
 // Variable declarations 
@@ -144,4 +147,4 @@ GButton btnSignalRoomL;
 GButton btnSignalRoomR; 
 GButton btnSignalCorridorL; 
 GButton btnScan; 
-GButton R; 
+GButton btnSignalCorridorR; 

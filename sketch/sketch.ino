@@ -30,6 +30,8 @@ int corridorCounter = 0;
 bool isInSubCorridor = false;
 bool leftCorridor = false;
 bool leftTurnOnly = false;
+bool rightCorridor = false;
+bool rightTurnOnly = false;
 
 void setup() {
   digitalWrite(LED, HIGH);
@@ -46,60 +48,87 @@ void setup() {
 void loop() {
   sensors.read(sensor_values);
   val = Serial.read();
-    
+
   switch (val) {
     case 'Q': //stop button
-        motors.setSpeeds(0, 0);
-        resetTurnLimiterFlags();        
+      motors.setSpeeds(0, 0);
+
       break;
     case 'W': //forward button
-        while (!isAtDeadEnd() && val != 'Q') {//each time we read the sensor values, do the following if leftmost and rightmost sensors are not both over a border.
-          moveForwardWithinBoundaries();
-        }
-        motors.setSpeeds(0, 0);
+      while (!isAtDeadEnd() && val != 'Q') {//each time we read the sensor values, do the following if leftmost and rightmost sensors are not both over a border.
+        moveForwardWithinBoundaries();
+      }
+      motors.setSpeeds(0, 0);
 
-        if (isInSubCorridor == true && val != 'Q') {
-          //do 180.. (eg. turn at this speed and then delay until 180 complete)
-          Serial.println("Reached end of sub-corridor, turning around.");
-          isInSubCorridor = false;
-        }
-        else if (val != 'Q') {//if we haven't sent quit command but have broken out of while loop, must be at wall, so send message indicating that
-          Serial.println("Wall detected, Zumo stopping.");
 
-          if (leftCorridor == true) {
-            leftTurnOnly = true;
-            leftCorridor = false;
-            Serial.println("Right turn restricted. You must turn left to continue search.");            
-          }
-        }     
-        //Serial.println(leftTurnOnly);
+      //ISSUE: if you press stop after signalling corridor, below will be true
+      //        if (isInSubCorridor == true && val == 'Q')
+      //        {
+      //          //...
+      //        }
+      if (isInSubCorridor == true && val != 'Q') {
+        //do 180.. (eg. turn at this speed and then delay until 180 complete)
+        Serial.println("Reached end of sub-corridor, turning around.");
+        isInSubCorridor = false;
+      }
+      else if (val != 'Q') {//if we haven't sent quit command but have broken out of while loop, must be at wall, so send message indicating that
+        Serial.println("Wall detected, Zumo stopping.");
+
+        if (leftCorridor == true) {
+          leftTurnOnly = true;
+          leftCorridor = false;
+          Serial.println("Right turn restricted. You must turn left to continue search.");
+        }
+        else if (rightCorridor == true) {
+          rightTurnOnly = true;
+          rightCorridor = false;
+          Serial.println("Left turn restricted. You must turn right to continue search.");          
+        }
+      }
+      //Serial.println(leftTurnOnly);
       break;
     case 'A': //left button
+      if (leftTurnOnly == true){
+        leftTurnOnly = false;
+      }
+
+      if (rightTurnOnly == false) {
         motors.setSpeeds(-150, 150); //rotate left
+      }
       break;
     case 'S': //backwards button
-        motors.setSpeeds(-100, -100); //go backwards
+      motors.setSpeeds(-100, -100); //go backwards
       break;
     case 'D': //right button
-        if (leftTurnOnly == false) {
-          motors.setSpeeds(150, -150); //rotate right
-        }
+      if (rightTurnOnly == true) {
+        rightTurnOnly = false;
+      }
+    
+      if (leftTurnOnly == false) {
+        motors.setSpeeds(150, -150); //rotate right
+      }
       break;
 
     case 'L'://left room signal button
-        signalRoom('L');
-      break;        
+      signalRoom('L');
+      break;
     case 'R'://right room signal button
-        signalRoom('R');
+      signalRoom('R');
       break;
-    case 'C': //corridor signal button
-        Serial.println("Turn into left sub-corridor now.");
-        ++corridorCounter;
-        isInSubCorridor = true;
-        leftCorridor = true;
+    case 'C': //corridor signal button LEFT
+      Serial.println("Turn into left sub-corridor now.");
+      ++corridorCounter;
+      isInSubCorridor = true;
+      leftCorridor = true;
       break;
+    case 'V': //corridor right signal
+      Serial.println("Turn into right sub-corridor now.");
+      ++corridorCounter;
+      isInSubCorridor = true;
+      rightCorridor = true; 
+      break;     
     case 'X': //scan button
-        scanRoom();
+      scanRoom();
       break;
   }
 }
@@ -154,10 +183,10 @@ void establishContact() {
   }
 }
 
-void signalRoom(char inDirection){
+void signalRoom(char inDirection) {
   ++roomCounter;
-  Serial.print("Room found in corridor "); 
-  Serial.print(corridorCounter);
+  Serial.print("Room found in corridor ");
+  Serial.print(corridorCounter+1);
   //print roomcounter too?
 
   if (inDirection == 'L') {
@@ -171,7 +200,6 @@ void signalRoom(char inDirection){
 
 void resetTurnLimiterFlags() {
   leftTurnOnly = false;
-  //rightTurnOnly = false;
 }
 
 int getObjectDistance() {
@@ -180,16 +208,16 @@ int getObjectDistance() {
 
 void scanRoom() {
   bool objectFoundFlag = false;
-  
-  for (int i=0; i<4; ++i)
+
+  for (int i = 0; i < 4; ++i)
   {
     if (i == 0 || i == 2)
     {
-      motors.setSpeeds(150,-150);
+      motors.setSpeeds(150, -150);
     }
     else
     {
-      motors.setSpeeds(-150,150);
+      motors.setSpeeds(-150, 150);
     }
 
     if (getObjectDistance() > 0)
@@ -199,7 +227,7 @@ void scanRoom() {
 
     delay(500);
   }
-  motors.setSpeeds(0,0);
+  motors.setSpeeds(0, 0);
 
   if (objectFoundFlag)
   {
@@ -207,7 +235,7 @@ void scanRoom() {
     Serial.print(roomCounter);
     Serial.println(".");
   }
-  else 
+  else
   {
     Serial.print("Object was not detected in room ");
     Serial.print(roomCounter);
