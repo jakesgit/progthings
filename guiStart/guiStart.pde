@@ -29,7 +29,7 @@ void serialEvent(Serial myPort) {
   if (val != null)
   { //make sure our data isn't empty before continuing
     val = trim(val); //trim whitespace and formatting characters
-    println(val);
+    //println(val);
     //look for our '!' string to start the handshake
     //if it's there, clear the buffer, and send a request for data
     if (firstContact == false)

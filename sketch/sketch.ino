@@ -68,7 +68,8 @@ void loop() {
 
           if (leftCorridor == true) {
             leftTurnOnly = true;
-            leftCorridor = false;            
+            leftCorridor = false;
+            Serial.println("Right turn restricted. You must turn left to continue search.");            
           }
         }     
         //Serial.println(leftTurnOnly);
