@@ -27,6 +27,10 @@ char val; //Data received from the serial port
 int roomCounter = 0;
 int corridorCounter = 0;
 
+bool isInSubCorridor = false;
+bool leftCorridor = false;
+bool leftTurnOnly = false;
+
 void setup() {
   digitalWrite(LED, HIGH);
   button.waitForButton();
@@ -46,6 +50,7 @@ void loop() {
   switch (val) {
     case 'Q': //stop button
         motors.setSpeeds(0, 0);
+        resetTurnLimiterFlags();        
       break;
     case 'W': //forward button
         while (!isAtDeadEnd() && val != 'Q') {//each time we read the sensor values, do the following if leftmost and rightmost sensors are not both over a border.
@@ -53,10 +58,20 @@ void loop() {
         }
         motors.setSpeeds(0, 0);
 
-        if (val != 'Q') 
-        {//if we haven't sent quit command but have broken out of while loop, must be at wall, so send message indicating that
-          Serial.println("Wall detected, Zumo stopping.");
+        if (isInSubCorridor == true && val != 'Q') {
+          //do 180.. (eg. turn at this speed and then delay until 180 complete)
+          Serial.println("Reached end of sub-corridor, turning around.");
+          isInSubCorridor = false;
         }
+        else if (val != 'Q') {//if we haven't sent quit command but have broken out of while loop, must be at wall, so send message indicating that
+          Serial.println("Wall detected, Zumo stopping.");
+
+          if (leftCorridor == true) {
+            leftTurnOnly = true;
+            leftCorridor = false;            
+          }
+        }     
+        //Serial.println(leftTurnOnly);
       break;
     case 'A': //left button
         motors.setSpeeds(-150, 150); //rotate left
@@ -65,7 +80,9 @@ void loop() {
         motors.setSpeeds(-100, -100); //go backwards
       break;
     case 'D': //right button
-        motors.setSpeeds(150, -150); //rotate right
+        if (leftTurnOnly == false) {
+          motors.setSpeeds(150, -150); //rotate right
+        }
       break;
 
     case 'L'://left room signal button
@@ -75,7 +92,10 @@ void loop() {
         signalRoom('R');
       break;
     case 'C': //corridor signal button
-        //++corridorCounter;
+        Serial.println("Turn into left sub-corridor now.");
+        ++corridorCounter;
+        isInSubCorridor = true;
+        leftCorridor = true;
       break;
     case 'X': //scan button
         scanRoom();
@@ -148,6 +168,11 @@ void signalRoom(char inDirection){
   }
 }
 
+void resetTurnLimiterFlags() {
+  leftTurnOnly = false;
+  //rightTurnOnly = false;
+}
+
 int getObjectDistance() {
   return sonar.ping() / US_ROUNDTRIP_CM;
 }
@@ -177,13 +202,13 @@ void scanRoom() {
 
   if (objectFoundFlag)
   {
-    Serial.print("An object was detected in room ");
+    Serial.print("Object was detected in room ");
     Serial.print(roomCounter);
     Serial.println(".");
   }
   else 
   {
-    Serial.print("No objects were detected in room ");
+    Serial.print("Object was not detected in room ");
     Serial.print(roomCounter);
     Serial.println(".");
   }

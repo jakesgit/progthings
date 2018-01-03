@@ -60,17 +60,21 @@ public void btnSignalRoomR_click1(GButton source, GEvent event) { //_CODE_:btnSi
   println("R");
 } //_CODE_:btnSignalRoomR:425371:
 
-public void btnSignalCorridor_click1(GButton source, GEvent event) { //_CODE_:btnSignalCorridor:233786:
+public void btnSignalCorridorL_click1(GButton source, GEvent event) { //_CODE_:btnSignalCorridorL:233786:
   println("btnSignalCorridor - GButton >> GEvent." + event + " @ " + millis());
   myPort.write('C');
   println("C");
-} //_CODE_:btnSignalCorridor:233786:
+} //_CODE_:btnSignalCorridorL:233786:
 
 public void btnScan_click1(GButton source, GEvent event) { //_CODE_:btnScan:211834:
   println("btnScan - GButton >> GEvent." + event + " @ " + millis());
   myPort.write('X');
   println("X");
 } //_CODE_:btnScan:211834:
+
+public void button1_click1(GButton source, GEvent event) { //_CODE_:R:730786:
+  println("R - GButton >> GEvent." + event + " @ " + millis());
+} //_CODE_:R:730786:
 
 
 
@@ -107,22 +111,25 @@ public void createGUI(){
   btnStop.setTextBold();
   btnStop.setLocalColorScheme(GCScheme.RED_SCHEME);
   btnStop.addEventHandler(this, "btnStop_click1");
-  btnSignalRoomL = new GButton(this, 100, 190, 80, 30);
+  btnSignalRoomL = new GButton(this, 10, 190, 80, 30);
   btnSignalRoomL.setText("Signal Left Room");
   btnSignalRoomL.setTextBold();
   btnSignalRoomL.addEventHandler(this, "btnSignalRoomL_click1");
-  btnSignalRoomR = new GButton(this, 190, 190, 80, 30);
+  btnSignalRoomR = new GButton(this, 100, 190, 80, 30);
   btnSignalRoomR.setText("Signal Right Room");
   btnSignalRoomR.setTextBold();
   btnSignalRoomR.addEventHandler(this, "btnSignalRoomR_click1");
-  btnSignalCorridor = new GButton(this, 10, 190, 80, 30);
-  btnSignalCorridor.setText("Signal Corridor");
-  btnSignalCorridor.setTextBold();
-  btnSignalCorridor.addEventHandler(this, "btnSignalCorridor_click1");
-  btnScan = new GButton(this, 140, 230, 80, 30);
+  btnSignalCorridorL = new GButton(this, 10, 230, 80, 30);
+  btnSignalCorridorL.setText("Signal  Left Corridor");
+  btnSignalCorridorL.setTextBold();
+  btnSignalCorridorL.addEventHandler(this, "btnSignalCorridorL_click1");
+  btnScan = new GButton(this, 190, 190, 80, 30);
   btnScan.setText("Scan Room");
   btnScan.setTextBold();
   btnScan.addEventHandler(this, "btnScan_click1");
+  R = new GButton(this, 100, 230, 80, 30);
+  R.setText("R (need implement)");
+  R.addEventHandler(this, "button1_click1");
 }
 
 // Variable declarations 
@@ -135,5 +142,6 @@ GButton btnBack;
 GButton btnStop; 
 GButton btnSignalRoomL; 
 GButton btnSignalRoomR; 
-GButton btnSignalCorridor; 
+GButton btnSignalCorridorL; 
 GButton btnScan; 
+GButton R; 
