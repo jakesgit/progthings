@@ -25,13 +25,70 @@ Pushbutton button(ZUMO_BUTTON); // pushbutton on pin 12
 
 char val; //Data received from the serial port
 int roomCounter = 0;
-int corridorCounter = 0;
+int corridorCounter = 1;
 
 bool isInSubCorridor = false;
 bool leftCorridor = false;
 bool leftTurnOnly = false;
 bool rightCorridor = false;
 bool rightTurnOnly = false;
+
+class Room
+{
+public:
+  Room();
+  Room(int, int);
+  int getID();
+  int getCorridorID();
+private: 
+  int _corridorID;
+  int _roomID;
+};
+
+//Room::Room() constructor?
+Room::Room() {}
+
+Room::Room(int roomID, int corridorID) { //int&?
+  _roomID = roomID;
+  _corridorID = corridorID; 
+}
+
+int Room::getID() {
+  return _roomID;
+}
+
+int Room::getCorridorID() {
+  return _corridorID;
+}
+
+
+
+class Corridor
+{ 
+public:
+  Corridor();
+  Corridor(int); //int&?
+  int getID();
+private:
+  int _corridorID;
+};
+
+Corridor::Corridor() {}
+
+Corridor::Corridor(int cID) {
+  _corridorID = cID;
+}
+
+int Corridor::getID() {
+  return _corridorID;
+}
+
+//Room* theRoom;
+Corridor* theCorridor = new Corridor(corridorCounter);
+Room* theRoom = new Room(roomCounter, corridorCounter);
+
+
+
 
 void setup() {
   digitalWrite(LED, HIGH);
@@ -60,18 +117,14 @@ void loop() {
       }
       motors.setSpeeds(0, 0);
 
-
-      //ISSUE: if you press stop after signalling corridor, below will be true
-      //        if (isInSubCorridor == true && val == 'Q')
-      //        {
-      //          //...
-      //        }
-      if (isInSubCorridor == true && val != 'Q') {
+      if (isInSubCorridor == true && val != 'Q') 
+      {
         //do 180.. (eg. turn at this speed and then delay until 180 complete)
         Serial.println("Reached end of sub-corridor, turning around.");
         isInSubCorridor = false;
       }
-      else if (val != 'Q') {//if we haven't sent quit command but have broken out of while loop, must be at wall, so send message indicating that
+      else if (val != 'Q') 
+      {//if we haven't sent quit command but have broken out of while loop, must be at wall, so send message indicating that
         Serial.println("Wall detected, Zumo stopping.");
 
         if (leftCorridor == true) {
@@ -117,13 +170,15 @@ void loop() {
       break;
     case 'C': //corridor signal button LEFT
       Serial.println("Turn into left sub-corridor now.");
-      ++corridorCounter;
+      theCorridor = new Corridor(++corridorCounter);
+      Serial.println(String(theCorridor->getID()));
       isInSubCorridor = true;
       leftCorridor = true;
       break;
     case 'V': //corridor right signal
       Serial.println("Turn into right sub-corridor now.");
-      ++corridorCounter;
+      theCorridor = new Corridor(++corridorCounter);
+      Serial.println(String(theCorridor->getID()));
       isInSubCorridor = true;
       rightCorridor = true; 
       break;     
@@ -184,9 +239,19 @@ void establishContact() {
 }
 
 void signalRoom(char inDirection) {
-  ++roomCounter;
+  
+    theRoom = new Room(++roomCounter, theCorridor->getID()); 
+//  Serial.print("DEBUG: ");
+//  Serial.print(String(theCorridor->getID()));
+//  Serial.print(" ");
+//  Serial.print(String(theRoom->getCorridorID()));
+//  Serial.print(" ");
+//  Serial.println(String(theRoom->getID()));
+
+  //delete theRoom;
+  
   Serial.print("Room found in corridor ");
-  Serial.print(corridorCounter+1);
+  Serial.print(theCorridor->getID());
   //print roomcounter too?
 
   if (inDirection == 'L') {
@@ -209,6 +274,8 @@ int getObjectDistance() {
 void scanRoom() {
   bool objectFoundFlag = false;
 
+  //store theRoom object in array of Rooms
+
   for (int i = 0; i < 4; ++i)
   {
     if (i == 0 || i == 2)
@@ -224,7 +291,6 @@ void scanRoom() {
     {
       objectFoundFlag = true;
     }
-
     delay(500);
   }
   motors.setSpeeds(0, 0);
@@ -232,13 +298,13 @@ void scanRoom() {
   if (objectFoundFlag)
   {
     Serial.print("Object was detected in room ");
-    Serial.print(roomCounter);
+    Serial.print(String(theRoom->getID()));
     Serial.println(".");
   }
   else
   {
     Serial.print("Object was not detected in room ");
-    Serial.print(roomCounter);
+    Serial.print(String(theRoom->getID()));
     Serial.println(".");
   }
 }
