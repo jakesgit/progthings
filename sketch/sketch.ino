@@ -37,7 +37,7 @@ class Room
 {
 public:
   Room();
-  Room(int, int);
+  Room(const int&, const int&);
   int getID();
   int getCorridorID();
 private: 
@@ -48,7 +48,7 @@ private:
 //Room::Room() constructor?
 Room::Room() {}
 
-Room::Room(int roomID, int corridorID) { //int&?
+Room::Room(const int& roomID, const int& corridorID) { //int&?
   _roomID = roomID;
   _corridorID = corridorID; 
 }
@@ -67,7 +67,7 @@ class Corridor
 { 
 public:
   Corridor();
-  Corridor(int); //int&?
+  Corridor(const int&); //int&?
   int getID();
 private:
   int _corridorID;
@@ -75,7 +75,7 @@ private:
 
 Corridor::Corridor() {}
 
-Corridor::Corridor(int cID) {
+Corridor::Corridor(const int& cID) {
   _corridorID = cID;
 }
 
@@ -86,7 +86,6 @@ int Corridor::getID() {
 //Room* theRoom;
 Corridor* theCorridor = new Corridor(corridorCounter);
 Room* theRoom = new Room(roomCounter, corridorCounter);
-
 
 
 
@@ -171,14 +170,14 @@ void loop() {
     case 'C': //corridor signal button LEFT
       Serial.println("Turn into left sub-corridor now.");
       theCorridor = new Corridor(++corridorCounter);
-      Serial.println(String(theCorridor->getID()));
-      isInSubCorridor = true;
+     // Serial.println(String(theCorridor->getID()));
+      isInSubCorridor = true; //possibly  make Corridor.subcorridor == true? and Corridor.left == true?
       leftCorridor = true;
       break;
     case 'V': //corridor right signal
       Serial.println("Turn into right sub-corridor now.");
       theCorridor = new Corridor(++corridorCounter);
-      Serial.println(String(theCorridor->getID()));
+     // Serial.println(String(theCorridor->getID()));
       isInSubCorridor = true;
       rightCorridor = true; 
       break;     
@@ -195,7 +194,7 @@ void moveForwardWithinBoundaries() {
 
   if (overLine(sensor_values[0]))
   { //if leftmost sensor detects the border
-    delay(120);
+    delay(50);
     motors.setSpeeds(0, 0); //wait 50ms and then stop (this is to make sure the sensors successfully detect a dead end)
     sensors.read(sensor_values); //read sensor values
 
@@ -209,7 +208,7 @@ void moveForwardWithinBoundaries() {
   }
   else if (overLine(sensor_values[5]))
   {
-    delay(120);
+    delay(50);
     motors.setSpeeds(0, 0);
     sensors.read(sensor_values);
 
@@ -247,8 +246,6 @@ void signalRoom(char inDirection) {
 //  Serial.print(String(theRoom->getCorridorID()));
 //  Serial.print(" ");
 //  Serial.println(String(theRoom->getID()));
-
-  //delete theRoom;
   
   Serial.print("Room found in corridor ");
   Serial.print(theCorridor->getID());
@@ -261,6 +258,9 @@ void signalRoom(char inDirection) {
   {
     Serial.println(" to our right.");
   }
+
+//  delete theCorridor;
+//  delete theRoom;
 }
 
 void resetTurnLimiterFlags() {
