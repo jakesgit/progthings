@@ -145,7 +145,7 @@ void loop() {
       }
 
       if (rightTurnOnly == false) {
-        motors.setSpeeds(-150, 150); //rotate left
+        motors.setSpeeds(-100, 100); //rotate left
       }
       break;
     case 'S': //backwards button
@@ -157,7 +157,7 @@ void loop() {
       }
     
       if (leftTurnOnly == false) {
-        motors.setSpeeds(150, -150); //rotate right
+        motors.setSpeeds(100, -100); //rotate right
       }
       break;
 
@@ -194,8 +194,9 @@ void moveForwardWithinBoundaries() {
 
   if (overLine(sensor_values[0]))
   { //if leftmost sensor detects the border
+    motors.setSpeeds(0, 100); //wait 50ms and then stop (this is to make sure the sensors successfully detect a dead end)
     delay(50);
-    motors.setSpeeds(0, 0); //wait 50ms and then stop (this is to make sure the sensors successfully detect a dead end)
+    motors.setSpeeds(0, 0);
     sensors.read(sensor_values); //read sensor values
 
     if (overLine(sensor_values[0]) && !overLine(sensor_values[5])) //now if the leftmost sensor detects the border and the rightmost sensor does not, safe to assume it is not a dead end
@@ -203,11 +204,12 @@ void moveForwardWithinBoundaries() {
       motors.setSpeeds(-100, -100); //reverse
       delay(200); //for 200ms
       motors.setSpeeds(100, -100); //then rotate right
-      delay(300); //for 200ms
+      delay(150); //for 200ms
     }
   }
   else if (overLine(sensor_values[5]))
   {
+    motors.setSpeeds(100, 0);
     delay(50);
     motors.setSpeeds(0, 0);
     sensors.read(sensor_values);
@@ -217,7 +219,7 @@ void moveForwardWithinBoundaries() {
       motors.setSpeeds(-100, -100); //reverse
       delay(200); //for 200ms
       motors.setSpeeds(-100, 100); //then rotate right
-      delay(300); //for 200ms
+      delay(150); //for 200ms
     }
   }
 }
