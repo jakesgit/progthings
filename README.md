@@ -1,10 +1,10 @@
 # Zumo Search and Rescue Assignment
 ### Tasks Achieved
 Out of the tasks that were outlined in the brief, my robot successfully completed the following:
-•	Task 1
-•	Task 2
-•	Task 3
-•	Task 4A, 4B and 4C
+- Task 1
+- Task 2
+- Task 3
+- Task 4A, 4B and 4C
 
 It does not complete task 5, although it does store relevant room/corridor data that could be used to achieve this task with. 
 
