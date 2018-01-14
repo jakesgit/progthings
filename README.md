@@ -14,10 +14,10 @@ My robot design uses libraries from provided by Pololu, the creators of the Zumo
 
 These included:
 
-•	ZumoBuzzer - for audio feedback	
-•	ZumoMotors - for controlling the motors of the Zumo
-•	Pushbutton - for operating a button on the back of the Zumo
-•	ZumoReflectanceSensorArray - for reading values of the detector on the underside of the Zumo	
+- ZumoBuzzer - for audio feedback	
+-	ZumoMotors - for controlling the motors of the Zumo
+- Pushbutton - for operating a button on the back of the Zumo
+- ZumoReflectanceSensorArray - for reading values of the detector on the underside of the Zumo	
 
 I also used a library called NewPing, created by Tim Eckel. It adds better performance and more features to the ultrasonic sensors used for detecting objects by the Zumo.
 
@@ -25,7 +25,7 @@ My project was loosely based on the BorderDetect example provided by Pololu for 
 
 ### Development
 
-###### ZumoReflectanceSensorArray
+##### ZumoReflectanceSensorArray
 One of the biggest issues I faced during this task was simply deciding the best way to achieve what I wanted to. The brief pointed out that we should check the BorderDetect and LineFollower examples provided by Pololu to understand the reflectance sensor, which I did. At first I didn't understand the differences between ZumoReflectanceSensorArray::read() method (used in BorderDetect) and ZumoReflectanceSensorArray::readLine() method (used in LineFollower). They both took an array of integers as the parameter, but one required callibration, one did not, and both behaved completely differently. After a lot of digging (SensorCallibration example) I learnt that readLine method was simply returning an int value of 0-3500 to indicate how close to the line it was (that it knows from calibration), whereas read() returns the QTR threshold value for the specific sensor. 
 I chose to base my own work on the BorderDetect example and less so on the LineFollower, as I felt it suited my needs better and I liked the fact that callibration was not necessary (I found callibration to be very hit and miss).
 
