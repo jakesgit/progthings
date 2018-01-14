@@ -8,6 +8,8 @@ Out of the tasks that were outlined in the brief, my robot successfully complete
 
 It does not complete task 5, although it does store relevant room/corridor data that could be used to achieve this task with. 
 
+[**Click here to view demonstration video**](https://www.youtube.com/watch?v=NTTpULcHOJQ)
+
 ### Acknowledgement and Sources
 
 My robot design uses libraries from provided by Pololu, the creators of the Zumo. 
