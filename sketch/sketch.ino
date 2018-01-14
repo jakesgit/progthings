@@ -7,7 +7,7 @@
 #include <StandardCplusplus.h> 
 #include <Vector>
 
-using namespace std;
+using namespace std; //for our vector
 
 //Zumo stuff...
 #define SENSOR_THRESHOLD 1000; //desired color threshold for QTR sensors. 
@@ -19,20 +19,17 @@ using namespace std;
 #define ECHO_PIN 6      //specify which pin the U/S sensor echo pin is wired to on the Arduino board.
 #define MAX_DISTANCE 30 //specify the desired max distance of the sonar range
 
-
-unsigned int sensor_values[NUM_SENSORS]; //create an array which holds an int value for each one of our sensors to return a value to.
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); //construct U/S sensor object with relevant info 
-
-//zumo stuff...
 ZumoBuzzer buzzer;
 ZumoMotors motors;
 ZumoReflectanceSensorArray sensors(QTR_NO_EMITTER_PIN);
 Pushbutton button(ZUMO_BUTTON); // pushbutton on pin 12
-
-char val; //Data received from the serial port
+unsigned int sensor_values[NUM_SENSORS]; //create an array which holds an int value for each one of our sensors to return a value to.
 int roomCounter = 0;
-int corridorCounter = 1;
+int corridorCounter = 1; //set to 1 as our Zumo will always already be inside a corridor when starting.
+char val; //Data received from the serial port
 
+//flags...
 bool isInSubCorridor = false;
 bool leftCorridor = false;
 bool leftTurnOnly = false;
@@ -123,13 +120,10 @@ void setup() {
 
 void loop() {
 
-  //read current values of the QTR sensors
-  sensors.read(sensor_values);
+  sensors.read(sensor_values); //read current values of the QTR sensors
+  val = Serial.read(); //read incoming data from processing
 
-  //read incoming data from processing
-  val = Serial.read();
-
-  switch (val) {
+  switch (val) {//change the bahavior of the Zumo depending on which data has been sent from GUI. 
     case 'Q': //stop button
         motors.setSpeeds(0, 0);
         break;
@@ -188,7 +182,6 @@ void loop() {
         motors.setSpeeds(100, -100); //rotate right
       }
       break;
-
     case 'L'://left room signal button
       signalRoom('L');
       break;
@@ -220,9 +213,9 @@ void moveForwardWithinBoundaries() {
   sensors.read(sensor_values);
   val = Serial.read();
 
-  if (overLine(sensor_values[0]))
-  { //if leftmost sensor detects the border
-    motors.setSpeeds(0, 100); //wait 50ms and then stop (this is to make sure the sensors successfully detect a dead end)
+  if (overLine(sensor_values[0])) //if leftmost sensor detects the border
+  {
+    motors.setSpeeds(0, 100); //power right motor for 70ms and then stop (this is to make sure the sensors successfully detect a dead end)
     delay(70);
     motors.setSpeeds(0, 0);
     sensors.read(sensor_values); //read sensor values
@@ -235,7 +228,7 @@ void moveForwardWithinBoundaries() {
       delay(200); //for 200ms
     }
   }
-  else if (overLine(sensor_values[5]))
+  else if (overLine(sensor_values[5])) //same again for the other (rightmost) side of the Zumo...
   {
     motors.setSpeeds(100, 0);
     delay(70);
@@ -262,18 +255,17 @@ bool overLine(int sensorPin) {//returns true if passed sensor is over border
 
 void establishContact() {
   while (Serial.available() <= 0) {
-    Serial.println("!");   // send a !
+    Serial.println("!");   // send a ! (to request data)
     delay(300);
   }
 }
 
 void signalRoom(char inDirection) {
   
-  theRoom = new Room(++roomCounter, theCorridor->getID());
+  theRoom = new Room(++roomCounter, theCorridor->getID()); //set our current room as the room we have signalled.
   
   Serial.print("Room found in corridor ");
   Serial.print(theCorridor->getID());
-  //print roomcounter too?
 
   if (inDirection == 'L') {
     Serial.println(" to our left.");
@@ -288,14 +280,14 @@ void resetTurnLimiterFlags() {
   leftTurnOnly = false;
 }
 
-int getObjectDistance() {
+int getObjectDistance() {//returns distance of object infront of U/S sensor 
   return sonar.ping() / US_ROUNDTRIP_CM;
 }
 
 void scanRoom() {
   bool objectFoundFlag = false;
 
-  //store theRoom object in array of Rooms
+  //add the room being scanned into the collection of checked rooms
   checkedRooms.push_back (theRoom);
 
   for (int i = 0; i < 15; ++i)
