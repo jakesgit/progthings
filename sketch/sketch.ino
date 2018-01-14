@@ -131,14 +131,12 @@ void loop() {
     case 'C': //corridor left signal
       Serial.println("Turn into left sub-corridor now.");
       theCorridor = new Corridor(++corridorCounter);
-     // Serial.println(String(theCorridor->getID()));
       isInSubCorridor = true;
       leftCorridor = true;
       break;
     case 'V': //corridor right signal
       Serial.println("Turn into right sub-corridor now.");
       theCorridor = new Corridor(++corridorCounter);
-     // Serial.println(String(theCorridor->getID()));
       isInSubCorridor = true;
       rightCorridor = true; 
       break;     
