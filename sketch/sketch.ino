@@ -4,18 +4,24 @@
 #include <QTRSensors.h>
 #include <ZumoReflectanceSensorArray.h>
 #include <NewPing.h>
+#include <StandardCplusplus.h> 
+#include <Vector>
+
+using namespace std;
+
+//Zumo stuff...
+#define SENSOR_THRESHOLD 1000; //desired color threshold for QTR sensors. 
+#define NUM_SENSORS 6 //no. of sensors that the ZumoReflectanceSensorArray has
+#define LED 13 //for the Zumo LED
+
+//NewPing stuff...
+#define TRIGGER_PIN 2   //specify which pin the U/S sensor trigger is wired to on the Arduino board.
+#define ECHO_PIN 6      //specify which pin the U/S sensor echo pin is wired to on the Arduino board.
+#define MAX_DISTANCE 30 //specify the desired max distance of the sonar range
 
 
-#define LED 13
-#define SENSOR_THRESHOLD 1000;
-
-#define TRIGGER_PIN 2
-#define ECHO_PIN 6
-#define MAX_DISTANCE 20
-NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); //NewPing constructor with necessary info
-
-#define NUM_SENSORS 6
-unsigned int sensor_values[NUM_SENSORS];
+unsigned int sensor_values[NUM_SENSORS]; //create an array which holds an int value for each one of our sensors to return a value to.
+NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); //construct U/S sensor object with relevant info 
 
 //zumo stuff...
 ZumoBuzzer buzzer;
@@ -45,7 +51,6 @@ private:
   int _roomID;
 };
 
-//Room::Room() constructor?
 Room::Room() {}
 
 Room::Room(const int& roomID, const int& corridorID) { //int&?
@@ -62,38 +67,53 @@ int Room::getCorridorID() {
 }
 
 
-
 class Corridor
 { 
 public:
   Corridor();
   Corridor(const int&); //int&?
   int getID();
+  void setID(const int&);
+  int getPreviousCorridorID();
 private:
   int _corridorID;
+  int _previousCorridorID;
 };
 
 Corridor::Corridor() {}
 
 Corridor::Corridor(const int& cID) {
   _corridorID = cID;
+  _previousCorridorID = cID - 1;
+}
+
+int Corridor::getPreviousCorridorID() {
+  return _previousCorridorID;
 }
 
 int Corridor::getID() {
   return _corridorID;
 }
 
-//Room* theRoom;
+void Corridor::setID(const int& theID){
+  _corridorID = theID;
+}
+
+//the corridor and room data corresponding to the Zumo's location 
 Corridor* theCorridor = new Corridor(corridorCounter);
 Room* theRoom = new Room(roomCounter, corridorCounter);
+
+//store room objects for places we have previously been.
+vector<Room*> checkedRooms;
 
 
 
 void setup() {
+
+  //turn LED on and wait for button push before playing tune and handshake with processing
   digitalWrite(LED, HIGH);
   button.waitForButton();
   digitalWrite(LED, LOW);
-  //buzzer.playNote(NOTE_G(3), 200, 15);
   buzzer.play(">g32>>c32");
   delay(1000);
 
@@ -102,23 +122,25 @@ void setup() {
 }
 
 void loop() {
+
+  //read current values of the QTR sensors
   sensors.read(sensor_values);
+
+  //read incoming data from processing
   val = Serial.read();
 
   switch (val) {
     case 'Q': //stop button
-      motors.setSpeeds(0, 0);
-
-      break;
-    case 'W': //forward button
-      while (!isAtDeadEnd() && val != 'Q') {//each time we read the sensor values, do the following if leftmost and rightmost sensors are not both over a border.
+        motors.setSpeeds(0, 0);
+        break;
+    case 'W': //forward butto
+      while (!isAtDeadEnd() && val != 'Q') {//each time we read the sensor values, do the following if leftmost and rightmost sensors are not above the set threshold
         moveForwardWithinBoundaries();
       }
       motors.setSpeeds(0, 0);
 
       if (isInSubCorridor == true && val != 'Q') 
       {
-        //do 180.. (eg. turn at this speed and then delay until 180 complete)
         Serial.println("Reached end of sub-corridor, turning around.");
         isInSubCorridor = false;
       }
@@ -127,14 +149,20 @@ void loop() {
         Serial.println("Wall detected, Zumo stopping.");
 
         if (leftCorridor == true) {
+          theCorridor->setID(theCorridor->getPreviousCorridorID());
           leftTurnOnly = true;
           leftCorridor = false;
+          delay(200);
           Serial.println("Right turn restricted. You must turn left to continue search.");
+          delay(50);
         }
         else if (rightCorridor == true) {
+          theCorridor->setID(theCorridor->getPreviousCorridorID());  
           rightTurnOnly = true;
           rightCorridor = false;
-          Serial.println("Left turn restricted. You must turn right to continue search.");          
+          delay(200);
+          Serial.println("Left turn restricted. You must turn right to continue search.");        
+          delay(50);
         }
       }
       //Serial.println(leftTurnOnly);
@@ -167,11 +195,11 @@ void loop() {
     case 'R'://right room signal button
       signalRoom('R');
       break;
-    case 'C': //corridor signal button LEFT
+    case 'C': //corridor left signal
       Serial.println("Turn into left sub-corridor now.");
       theCorridor = new Corridor(++corridorCounter);
      // Serial.println(String(theCorridor->getID()));
-      isInSubCorridor = true; //possibly  make Corridor.subcorridor == true? and Corridor.left == true?
+      isInSubCorridor = true;
       leftCorridor = true;
       break;
     case 'V': //corridor right signal
@@ -195,31 +223,31 @@ void moveForwardWithinBoundaries() {
   if (overLine(sensor_values[0]))
   { //if leftmost sensor detects the border
     motors.setSpeeds(0, 100); //wait 50ms and then stop (this is to make sure the sensors successfully detect a dead end)
-    delay(50);
+    delay(70);
     motors.setSpeeds(0, 0);
     sensors.read(sensor_values); //read sensor values
 
     if (overLine(sensor_values[0]) && !overLine(sensor_values[5])) //now if the leftmost sensor detects the border and the rightmost sensor does not, safe to assume it is not a dead end
     {
       motors.setSpeeds(-100, -100); //reverse
-      delay(200); //for 200ms
+      delay(300); //for 200ms
       motors.setSpeeds(100, -100); //then rotate right
-      delay(150); //for 200ms
+      delay(200); //for 200ms
     }
   }
   else if (overLine(sensor_values[5]))
   {
     motors.setSpeeds(100, 0);
-    delay(50);
+    delay(70);
     motors.setSpeeds(0, 0);
     sensors.read(sensor_values);
 
     if (overLine(sensor_values[5]) && !overLine(sensor_values[0]))
     {
       motors.setSpeeds(-100, -100); //reverse
-      delay(200); //for 200ms
+      delay(300); //for 200ms
       motors.setSpeeds(-100, 100); //then rotate right
-      delay(150); //for 200ms
+      delay(200); //for 200ms
     }
   }
 }
@@ -241,13 +269,7 @@ void establishContact() {
 
 void signalRoom(char inDirection) {
   
-    theRoom = new Room(++roomCounter, theCorridor->getID()); 
-//  Serial.print("DEBUG: ");
-//  Serial.print(String(theCorridor->getID()));
-//  Serial.print(" ");
-//  Serial.print(String(theRoom->getCorridorID()));
-//  Serial.print(" ");
-//  Serial.println(String(theRoom->getID()));
+  theRoom = new Room(++roomCounter, theCorridor->getID());
   
   Serial.print("Room found in corridor ");
   Serial.print(theCorridor->getID());
@@ -260,9 +282,6 @@ void signalRoom(char inDirection) {
   {
     Serial.println(" to our right.");
   }
-
-//  delete theCorridor;
-//  delete theRoom;
 }
 
 void resetTurnLimiterFlags() {
@@ -277,17 +296,14 @@ void scanRoom() {
   bool objectFoundFlag = false;
 
   //store theRoom object in array of Rooms
+  checkedRooms.push_back (theRoom);
 
-  for (int i = 0; i < 4; ++i)
+  for (int i = 0; i < 15; ++i)
   {
-    if (i == 0 || i == 2)
-    {
-      motors.setSpeeds(150, -150);
-    }
-    else
-    {
-      motors.setSpeeds(-150, 150);
-    }
+    motors.setSpeeds(150,-150);
+    delay(200);
+    motors.setSpeeds(0,0);
+    delay(100);
 
     if (getObjectDistance() > 0)
     {

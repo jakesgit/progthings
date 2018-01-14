@@ -12,7 +12,7 @@ boolean firstContact = false;
 public void setup() {
   size(500, 360);
 
-  portName = Serial.list()[1];
+  portName = Serial.list()[0];
   myPort = new Serial(this, portName, 9600);
   myPort.bufferUntil('\n');
 

@@ -87,9 +87,9 @@ public void createGUI(){
   G4P.setGlobalColorScheme(GCScheme.BLUE_SCHEME);
   G4P.setCursor(ARROW);
   surface.setTitle("Sketch Window");
-  txtMsgFromZumo = new GTextArea(this, 290, 30, 198, 199, G4P.SCROLLBARS_BOTH | G4P.SCROLLBARS_AUTOHIDE);
+  txtMsgFromZumo = new GTextArea(this, 290, 99, 198, 199, G4P.SCROLLBARS_BOTH | G4P.SCROLLBARS_AUTOHIDE);
   txtMsgFromZumo.setText("Messages from Zumo");
-  txtMsgFromZumo.setLocalColorScheme(GCScheme.PURPLE_SCHEME);
+  txtMsgFromZumo.setLocalColorScheme(GCScheme.ORANGE_SCHEME);
   txtMsgFromZumo.setOpaque(true);
   txtMsgFromZumo.addEventHandler(this, "txtMsgFromZumo_change1");
   btnLeft = new GButton(this, 10, 100, 80, 30);
