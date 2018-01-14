@@ -1,5 +1,5 @@
 # Zumo Search and Rescue Report
-## Tasks Achieved
+### Tasks Achieved
 Out of the tasks that were outlined in the brief, my robot successfully completed the following:
 •	Task 1
 •	Task 2
@@ -8,7 +8,7 @@ Out of the tasks that were outlined in the brief, my robot successfully complete
 
 It does not complete task 5, although it does store relevant room/corridor data that could be used to achieve this task with. 
 
-## Acknowledgement and Sources
+### Acknowledgement and Sources
 
 My robot design uses libraries from provided by Pololu, the creators of the Zumo. 
 
@@ -23,7 +23,7 @@ I also used a library called NewPing, created by Tim Eckel. It adds better perfo
 
 My project was loosely based on the BorderDetect example provided by Pololu for demonstrating how the ZumoRefelectanceSensorArray works.
 
-## Development
+### Development
 
 ###### ZumoReflectanceSensorArray
 One of the biggest issues I faced during this task was simply deciding the best way to achieve what I wanted to. The brief pointed out that we should check the BorderDetect and LineFollower examples provided by Pololu to understand the reflectance sensor, which I did. At first I didn't understand the differences between ZumoReflectanceSensorArray::read() method (used in BorderDetect) and ZumoReflectanceSensorArray::readLine() method (used in LineFollower). They both took an array of integers as the parameter, but one required callibration, one did not, and both behaved completely differently. After a lot of digging (SensorCallibration example) I learnt that readLine method was simply returning an int value of 0-3500 to indicate how close to the line it was (that it knows from calibration), whereas read() returns the QTR threshold value for the specific sensor. 
