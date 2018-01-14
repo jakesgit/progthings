@@ -4,6 +4,8 @@
 #include <QTRSensors.h>
 #include <ZumoReflectanceSensorArray.h>
 #include <NewPing.h>
+#include <Room.h>
+#include <Corridor.h>
 #include <StandardCplusplus.h> 
 #include <Vector>
 
@@ -36,74 +38,12 @@ bool leftTurnOnly = false;
 bool rightCorridor = false;
 bool rightTurnOnly = false;
 
-class Room
-{
-public:
-  Room();
-  Room(const int&, const int&);
-  int getID();
-  int getCorridorID();
-private: 
-  int _corridorID;
-  int _roomID;
-};
-
-Room::Room() {}
-
-Room::Room(const int& roomID, const int& corridorID) { //int&?
-  _roomID = roomID;
-  _corridorID = corridorID; 
-}
-
-int Room::getID() {
-  return _roomID;
-}
-
-int Room::getCorridorID() {
-  return _corridorID;
-}
-
-
-class Corridor
-{ 
-public:
-  Corridor();
-  Corridor(const int&); //int&?
-  int getID();
-  void setID(const int&);
-  int getPreviousCorridorID();
-private:
-  int _corridorID;
-  int _previousCorridorID;
-};
-
-Corridor::Corridor() {}
-
-Corridor::Corridor(const int& cID) {
-  _corridorID = cID;
-  _previousCorridorID = cID - 1;
-}
-
-int Corridor::getPreviousCorridorID() {
-  return _previousCorridorID;
-}
-
-int Corridor::getID() {
-  return _corridorID;
-}
-
-void Corridor::setID(const int& theID){
-  _corridorID = theID;
-}
-
 //the corridor and room data corresponding to the Zumo's location 
 Corridor* theCorridor = new Corridor(corridorCounter);
 Room* theRoom = new Room(roomCounter, corridorCounter);
 
 //store room objects for places we have previously been.
 vector<Room*> checkedRooms;
-
-
 
 void setup() {
 
